@@ -1,12 +1,15 @@
-import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core'
-import { sql } from 'drizzle-orm'
+import { sql } from "drizzle-orm";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const todos = sqliteTable('todos', {
-  id: integer({ mode: 'number' }).primaryKey({
+export const files = sqliteTable("files", {
+  id: integer({ mode: "number" }).primaryKey({
     autoIncrement: true,
   }),
-  title: text().notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(
-    sql`(unixepoch())`,
+  fileName: text("file_name").notNull(),
+  hash: text("hash").notNull(),
+  size: integer("size").notNull(),
+  path: text("path").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(
+    sql`(unixepoch())`
   ),
-})
+});
