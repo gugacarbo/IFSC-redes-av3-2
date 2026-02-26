@@ -1,6 +1,6 @@
  
 
-import { cn } from "#/lib/utils"
+import { cn } from "#/app/lib/utils"
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
