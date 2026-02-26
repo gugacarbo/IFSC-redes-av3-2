@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const files = sqliteTable("files", {
   id: integer({ mode: "number" }).primaryKey({
@@ -13,3 +14,6 @@ export const files = sqliteTable("files", {
     sql`(unixepoch())`
   ),
 });
+
+export const fileSchema = createSelectSchema(files);
+export const insertFileSchema = createInsertSchema(files);
