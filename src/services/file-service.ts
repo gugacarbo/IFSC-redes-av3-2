@@ -5,6 +5,10 @@ import { env } from "#/env";
 import { createHash } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export async function validateFileInput({
   file,
@@ -37,12 +41,15 @@ export async function putFile({
 }) {
   const storagePath = env.STORAGE_PATH;
 
-  const filePath = join(storagePath, fileName);
+  const appRoot = join(__dirname, "..", "..");
+
+  const rootPath = join(appRoot, storagePath);
+  const filePath = join(rootPath, fileName);
 
   await mkdir(dirname(filePath), { recursive: true });
   await writeFile(filePath, content);
 
-  await db
+  return await db
     .insert(files)
     .values({
       fileName: fileName,

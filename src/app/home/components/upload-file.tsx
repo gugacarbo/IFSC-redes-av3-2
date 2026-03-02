@@ -2,50 +2,92 @@ import { Card } from "#/app/components/ui/card";
 import { Input } from "#/app/components/ui/input";
 
 import { Progress } from "#/app/components/ui/progress";
-import type { FileType } from "#/db/schema";
+import type { InsertFileType } from "#/db/schema";
+import { createFile } from "#/server/create-file";
 import { FileUp } from "lucide-react";
 import { useState, useRef } from "react";
+import { toast } from "sonner";
 
-function UploadFile({ addFile }: { addFile: (file: FileType) => void }) {
+function UploadFile({ addFile }: { addFile: (file: InsertFileType) => void }) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = e.target.files?.[0];
-    if (uploadedFile) {
-      setIsUploading(true);
-      setUploadProgress(0);
 
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsUploading(false);
-            // Add new file to the list
-            const newFile = {
-              id: new Date().getMilliseconds(),
-              fileName: uploadedFile.name,
-              hash: Math.random().toString(36).substring(2, 15),
-              size: uploadedFile.size,
-              path: `/files/${uploadedFile.name}`,
-              createdAt: new Date(),
-              type: uploadedFile.type.includes("image")
-                ? "image"
-                : uploadedFile.type.includes("video")
-                  ? "video"
-                  : uploadedFile.type.includes("audio")
-                    ? "audio"
-                    : uploadedFile.name.includes(".pdf")
-                      ? "pdf"
-                      : "unknown",
-            };
-            addFile(newFile);
-            return 0;
-          }
-          return prev + Math.random() * 10;
-        });
-      }, 200);
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        // Remove data URL prefix (e.g., "data:image/png;base64,")
+        const base64Content = base64String.split(",")[1];
+        resolve(base64Content);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const calculateHash = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("1");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFile = e.target.files?.[0];
+    if (!uploadedFile) return;
+
+    setIsUploading(true);
+    setUploadProgress(30);
+
+    try {
+      // Calculate hash and convert to base64 in parallel
+      const [hash, base64Value] = await Promise.all([
+        calculateHash(uploadedFile),
+        fileToBase64(uploadedFile),
+      ]);
+
+      setUploadProgress(60);
+
+      // Call the server function to save the file
+      const response = await createFile({
+        data: {
+          cmd: "put_req",
+          file: uploadedFile.name,
+          hash: hash,
+          value: base64Value,
+        },
+      });
+
+      setUploadProgress(100);
+
+      if (response.status === "ok") {
+        // Fetch the file info from the database to get the complete FileType
+        const newFile: InsertFileType = {
+          id: Date.now(), // Temporary ID until refresh
+          fileName: uploadedFile.name,
+          hash: hash,
+          size: uploadedFile.size,
+          path: `/files/${uploadedFile.name}`,
+          createdAt: new Date(),
+        };
+        addFile(newFile);
+      } else {
+        toast.error("Erro ao enviar arquivo.");
+        console.error("Failed to upload file");
+      }
+    } catch (error) {
+      toast.error(
+        "Erro ao enviar arquivo:" +
+          (error instanceof Error ? error?.message : "")
+      );
+      console.error("Error uploading file:", error);
+    } finally {
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 500);
     }
   };
 

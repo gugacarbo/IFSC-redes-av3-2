@@ -11,6 +11,7 @@ import TanStackQueryDevtools from "#/integrations/tanstack-query/devtools";
 import TanStackQueryProvider from "#/integrations/tanstack-query/root-provider";
 import appCss from "#/styles.css?url";
 import { ThemeProvider } from "#/app/components/theme/theme-provider";
+import { Toaster } from "#/app/components/ui/sonner";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -50,6 +51,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <body className="bg-background text-foreground">
           <TanStackQueryProvider>
             {children}
+            <Toaster position="top-center" />
             <TanStackDevtools
               config={{
                 position: "bottom-right",
