@@ -22,7 +22,9 @@ export const formatFileSize = (bytes: number) => {
 };
 
 export const formatDate = (date: Date | string) => {
-  const date_ = typeof date === "string" ? new Date(date) : date;
+  const date_ =
+    typeof date === "string" ? new Date(date) : (date ?? new Date());
+
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -44,5 +46,41 @@ export const getFileIcon = (type: string) => {
       return <MusicIcon className="h-5 w-5 text-green-500" />;
     default:
       return <FileIcon className="h-5 w-5 text-gray-500" />;
+  }
+};
+
+export const getFileType = (path: string) => {
+  const extension = path.split(".").pop()?.toLowerCase();
+
+  switch (extension) {
+    case "pdf":
+      return "pdf";
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "webp":
+    case "svg":
+    case "bmp":
+    case "ico":
+      return "image";
+    case "mp4":
+    case "avi":
+    case "mov":
+    case "wmv":
+    case "flv":
+    case "webm":
+    case "mkv":
+      return "video";
+    case "mp3":
+    case "wav":
+    case "ogg":
+    case "flac":
+    case "aac":
+    case "wma":
+    case "m4a":
+      return "audio";
+    default:
+      return "file";
   }
 };

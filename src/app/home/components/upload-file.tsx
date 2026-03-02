@@ -1,8 +1,8 @@
-import type { FileType } from "#/@types/file";
 import { Card } from "#/app/components/ui/card";
 import { Input } from "#/app/components/ui/input";
 
 import { Progress } from "#/app/components/ui/progress";
+import type { FileType } from "#/db/schema";
 import { FileUp } from "lucide-react";
 import { useState, useRef } from "react";
 

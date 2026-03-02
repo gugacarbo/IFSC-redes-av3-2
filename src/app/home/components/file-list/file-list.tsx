@@ -1,4 +1,4 @@
-import type { FileType } from "#/@types/file";
+import type { FileType } from "#/db/schema";
 import { Button } from "#/app/components/ui/button";
 import {
   Card,
@@ -6,7 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "#/app/components/ui/card";
-import { formatDate, formatFileSize, getFileIcon } from "#/app/lib/utils";
+import {
+  formatDate,
+  formatFileSize,
+  getFileIcon,
+  getFileType,
+} from "#/app/lib/utils";
 import { DownloadIcon, FileTextIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { SearchFile } from "./search-file";
@@ -51,7 +56,7 @@ function FileList({
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-muted rounded-md">
-                      {getFileIcon(file.type)}
+                      {getFileIcon(getFileType(file.path))}
                     </div>
                     <div>
                       <p className="font-medium">{file.fileName}</p>

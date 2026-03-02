@@ -1,7 +1,7 @@
-import { formatDate, formatFileSize } from "#/app/lib/utils";
+import { formatDate, formatFileSize, getFileType } from "#/app/lib/utils";
 import { Download, FileText, Video, File } from "lucide-react";
 import { Button } from "#/app/components/ui/button";
-import type { FileType } from "#/@types/file";
+import type { FileType } from "#/db/schema";
 
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
 } from "#/app/components/ui/dialog";
 
 function PreviewFile({ file, close }: { file: FileType; close: () => void }) {
+  const filetype = getFileType(file.path);
   return (
     <Dialog open={!!file} onOpenChange={close}>
       <DialogContent>
@@ -20,13 +21,13 @@ function PreviewFile({ file, close }: { file: FileType; close: () => void }) {
         </DialogHeader>
 
         <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-          {file.type === "image" ? (
+          {filetype === "image" ? (
             <img
               src={file.path}
               alt={file.fileName}
               className="max-w-full h-auto rounded-md"
             />
-          ) : file.type === "pdf" ? (
+          ) : filetype === "pdf" ? (
             <div className="flex flex-col items-center justify-center h-96">
               <FileText className="h-16 w-16 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
@@ -34,7 +35,7 @@ function PreviewFile({ file, close }: { file: FileType; close: () => void }) {
                 abrir o arquivo.
               </p>
             </div>
-          ) : file.type === "video" ? (
+          ) : filetype === "video" ? (
             <div className="flex flex-col items-center justify-center h-96">
               <Video className="h-16 w-16 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">

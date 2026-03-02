@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "#/app/home/components/header";
 import { Stats } from "#/app/home/components/stats/stats";
-import type { FileType } from "#/@types/file";
+import type { FileType } from "#/db/schema";
 import { FileList } from "#/app/home/components/file-list/file-list";
 import { UploadFile } from "#/app/home/components/upload-file";
 
@@ -14,7 +14,6 @@ const mockFiles: FileType[] = [
     size: 2048000,
     path: "/files/relatorio-final.pdf",
     createdAt: new Date(Date.now() - 86400000),
-    type: "pdf",
   },
   {
     id: 2,
@@ -23,7 +22,6 @@ const mockFiles: FileType[] = [
     size: 4500000,
     path: "/files/foto-viagem.jpg",
     createdAt: new Date(Date.now() - 172800000),
-    type: "image",
   },
   {
     id: 3,
@@ -32,7 +30,6 @@ const mockFiles: FileType[] = [
     size: 25000000,
     path: "/files/aula-programacao.mp4",
     createdAt: new Date(Date.now() - 259200000),
-    type: "video",
   },
   {
     id: 4,
@@ -41,7 +38,6 @@ const mockFiles: FileType[] = [
     size: 15000000,
     path: "/files/projeto-react.zip",
     createdAt: new Date(Date.now() - 604800000),
-    type: "zip",
   },
 ];
 

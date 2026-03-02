@@ -3,8 +3,9 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    SERVER_URL: z.string().optional(),
+    // SERVER_URL: z.string().optional(),
     DATABASE_URL: z.string(),
+    STORAGE_PATH: z.string().default("/storage"),
   },
 
   /**

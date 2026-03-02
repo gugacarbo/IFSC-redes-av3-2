@@ -1,7 +1,7 @@
-import type { FileType } from "#/@types/file";
 import { Card } from "#/app/components/ui/card";
 import { formatFileSize } from "#/app/lib/utils";
 import { FileIcon, FileUp, Upload } from "lucide-react";
+import type { FileType } from "#/db/schema"
 
 function Stats({ files }: { files: FileType[] }) {
   return (

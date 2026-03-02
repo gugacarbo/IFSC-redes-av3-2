@@ -1,3 +1,5 @@
+import z from "zod";
+
 export interface COMMAND {
   cmd:
     | "list_req"
@@ -14,32 +16,41 @@ export interface LIST_REQ extends COMMAND {
 
 export interface LIST_RESP extends COMMAND {
   cmd: "list_resp";
-  files: "<file_list_vector>";
+  files: string[]; //"<file_list_vector>";
 }
 
-export interface PUT_REQ extends COMMAND {
+export const putReqSchema = z.object({
+  cmd: z.literal("put_req"),
+  file: z.string().min(1),
+  hash: z.string().length(64),
+  value: z.string().min(1),
+});
+
+type PutReqType = z.infer<typeof putReqSchema>;
+
+export interface PUT_REQ extends PutReqType, COMMAND {
   cmd: "put_req";
-  file: "<file_name>";
-  hash: "<hash_value>";
-  value: "<file_byte_base64>";
+  file: string; //"<file_name>";
+  hash: string; //"<hash_value>";
+  value: string; //"<file_byte_base64>";
 }
 
 export interface PUT_RESP extends COMMAND {
   cmd: "put_resp";
-  file: "<file_name>";
-  status: "<ok/fail>";
+  file: string; //"<file_name>";
+  status: "ok" | "fail"; //"<ok/fail>";
 }
 
 export interface GET_REQ extends COMMAND {
   cmd: "get_req";
-  file: "<file_name>";
+  file: string; //"<file_name>";
 }
 
 export interface GET_RESP extends COMMAND {
   cmd: "get_resp";
-  file: "<file_name>";
-  hash: "<hash_value>";
-  value: "<file_byte_base64>";
+  file: string; //"<file_name>";
+  hash: string; //"<hash_value>";
+  value: string; //"<file_byte_base64>";
 }
 
 export type Command =
