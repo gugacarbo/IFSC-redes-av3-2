@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PUT_REQ } from "#/@types/command";
 import { db } from "#/db";
@@ -10,8 +10,20 @@ import { env } from "#/env";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+export function resolvePath(path: string) {
+  const storagePath = env.STORAGE_PATH;
+
+  const appRoot = join(__dirname, "..", "..");
+
+  const rootPath = join(appRoot, storagePath);
+  const filePath = join(rootPath, path);
+  return filePath;
+}
+
 export async function listFiles() {
-  const filesList = await db.query.files.findMany();
+  const filesList = await db.query.files.findMany({
+    orderBy: (fields, { desc }) => desc(fields.createdAt),
+  });
 
   return filesList;
 }
@@ -24,7 +36,6 @@ export async function validateFileInput({
   const fileBuffer = Buffer.from(value, "base64");
 
   const calculatedHash = createHash("sha256").update(fileBuffer).digest("hex");
-  console.log({ hash, calculatedHash });
 
   if (calculatedHash !== hash) {
     throw new Error("Invalid Hash");
@@ -46,12 +57,12 @@ export async function putFile({
   hash: string;
   content: Buffer<ArrayBuffer>;
 }) {
-  const storagePath = env.STORAGE_PATH;
+  const randomId = randomBytes(4).toString("hex");
+  const extension = extname(fileName);
+  const nameWithoutExt = fileName.slice(0, fileName.length - extension.length);
+  const newFilePath = `${nameWithoutExt}_${randomId}${extension}`;
 
-  const appRoot = join(__dirname, "..", "..");
-
-  const rootPath = join(appRoot, storagePath);
-  const filePath = join(rootPath, fileName);
+  const filePath = resolvePath(newFilePath);
 
   await mkdir(dirname(filePath), { recursive: true });
   await writeFile(filePath, content);
@@ -59,10 +70,10 @@ export async function putFile({
   return await db
     .insert(files)
     .values({
-      fileName: fileName,
-      hash: hash,
       size: content.length,
+      fileName: fileName,
       path: filePath,
+      hash: hash,
     })
     .returning();
 }

@@ -14,9 +14,12 @@ import {
   getFileType,
 } from "#/app/lib/utils";
 import type { FileType } from "#/db/schema";
+import { UploadProgress } from "./upload-progress";
+import { useUploadFile } from "./hooks/use-upload-file";
 import { EmptyFiles } from "./empty-files";
 import { PreviewFile } from "./preview-file";
 import { SearchFile } from "./search-file";
+import { DragHere } from "./drag-here";
 
 function FileList({ files }: { files: FileType[] }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,20 +29,39 @@ function FileList({ files }: { files: FileType[] }) {
     file.fileName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const {
+    isUploading,
+    uploadProgress,
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    open,
+    isFileDialogActive
+  } = useUploadFile();
+
   const deleteFile = (_: number) => {};
 
   return (
     <>
       <SearchFile value={searchQuery} onChange={setSearchQuery} />
 
-      <Card>
+      <Card {...getRootProps()} className="relative ">
+        <DragHere isDragActive={isDragActive} />
         <CardHeader className="flex items-center justify-between border-b ">
-          <CardTitle>Arquivos</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {filteredFiles.length} arquivos
-          </p>
+          <div>
+            <CardTitle>Arquivos</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {filteredFiles.length} arquivos
+            </p>
+          </div>
+          <Button onClick={open} variant="default" disabled={isFileDialogActive}>
+            Adicionar Arquivo
+          </Button>
         </CardHeader>
+        <input {...getInputProps()} />
         <CardContent>
+          {isUploading && <UploadProgress progress={uploadProgress} />}
+
           {/* File Items */}
           {filteredFiles.length === 0 ? (
             <EmptyFiles />
