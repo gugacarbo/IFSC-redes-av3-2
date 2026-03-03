@@ -33,6 +33,8 @@ export const listFilesFn = createServerFn({
           countFiles(search),
           getTotalSize(),
         ]);
+        
+        await new Promise((res) => setTimeout(() => res(true), 600));
 
         return {
           cmd: "list_resp",

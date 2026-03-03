@@ -33,7 +33,7 @@ function Home() {
     });
   };
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching, isPlaceholderData } = useQuery({
     queryKey: ["files", offset, limit, search],
     queryFn: () =>
       listFilesFn({
@@ -43,6 +43,7 @@ function Home() {
           search,
         },
       }),
+    placeholderData: (previousData) => previousData,
   });
 
   const totalPages = Math.ceil((data?.total || 0) / limit);
@@ -66,26 +67,27 @@ function Home() {
   return (
     <div className="min-h-screen pb-32">
       <Header />
-      {isLoading ? (
-        <p>Carregando</p>
-      ) : (
-        <main className="container mx-auto p-4 space-y-4">
-          <Stats
-            files={files}
-            totalItems={totalItems}
-            totalSize={data?.totalSize || 0}
-          />
-          <FileList
-            files={files}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            totalItems={totalItems}
-            searchQuery={search}
-            onSearchChange={handleSetSearchQuery}
-          />
-        </main>
-      )}
+
+      <main className="container mx-auto p-4 space-y-4">
+        <Stats
+          files={files}
+          totalItems={totalItems}
+          totalSize={data?.totalSize || 0}
+          isLoading={isLoading}
+          isFetching={isFetching && isPlaceholderData}
+        />
+        <FileList
+          files={files}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalItems={totalItems}
+          searchQuery={search}
+          onSearchChange={handleSetSearchQuery}
+          isLoading={isLoading}
+          isFetching={isFetching &&isPlaceholderData}
+        />
+      </main>
     </div>
   );
 }

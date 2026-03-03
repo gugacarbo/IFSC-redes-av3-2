@@ -1,4 +1,5 @@
 import { Card } from "#/app/components/ui/card";
+import { Skeleton } from "#/app/components/ui/skeleton";
 import { formatFileSize } from "#/app/lib/utils";
 import { FileIcon, FileUp, Upload } from "lucide-react";
 import type { FileType } from "#/db/schema";
@@ -7,13 +8,57 @@ function Stats({
   files,
   totalItems,
   totalSize,
+  isLoading,
+  isFetching,
 }: {
   files: FileType[];
   totalItems: number;
   totalSize: number;
+  isLoading: boolean;
+  isFetching: boolean;
 }) {
+  const showSkeleton = isLoading && files.length === 0;
+  const isStale = isFetching && files.length > 0;
+  if (showSkeleton) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-12 w-12 rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-12 w-12 rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-12 w-12 rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div
+      className={`grid grid-cols-1 md:grid-cols-3 gap-4 transition-opacity ${
+        isStale ? "opacity-50 pointer-events-none" : ""
+      }`}
+    >
       <Card className="p-6">
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">

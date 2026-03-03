@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "#/app/components/ui/card";
+import { Skeleton } from "#/app/components/ui/skeleton";
 
 import {
   formatDate,
@@ -31,6 +32,8 @@ interface FileListProps {
   onPageChange: (page: number) => void;
   searchQuery?: string;
   onSearchChange: (value: string) => void;
+  isLoading: boolean;
+  isFetching: boolean;
 }
 
 function FileList({
@@ -41,7 +44,12 @@ function FileList({
   onPageChange,
   searchQuery,
   onSearchChange,
+  isLoading,
+  isFetching,
 }: FileListProps) {
+  const showSkeleton = isLoading && files.length === 0;
+  const isStale = isFetching && files.length > 0;
+
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
 
   const {
@@ -60,7 +68,7 @@ function FileList({
     <>
       <SearchFile value={searchQuery} onChange={onSearchChange} />
 
-      <Card {...getRootProps()} className="relative ">
+      <Card {...getRootProps()} className="relative">
         <DragHere isDragActive={isDragActive} />
         <CardHeader className="flex items-center justify-between border-b ">
           <div>
@@ -79,62 +87,84 @@ function FileList({
         </CardHeader>
         <input {...getInputProps()} />
         <CardContent>
+          {showSkeleton &&
+            Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between mb-4  rounded-lg"
+              >
+                <div className="flex items-center gap-2 w-1/2 min-w-32">
+                  <Skeleton className="size-12" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </div>
+            ))}
           {isUploading && <UploadProgress progress={uploadProgress} />}
 
-          {/* File Items */}
-          {files.length === 0 ? (
-            <EmptyFiles />
-          ) : (
-            <div className="space-y-3">
-              {files.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-muted rounded-md">
-                      {getFileIcon(getFileType(file.path))}
+          <div
+            className={`transition-opacity ${
+              isStale ? "opacity-50 pointer-events-none" : ""
+            }`}
+          >
+            {!showSkeleton && files.length === 0 ? (
+              <EmptyFiles />
+            ) : (
+              <div className="space-y-3">
+                {files.map((file) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-muted rounded-md">
+                        {getFileIcon(getFileType(file.path))}
+                      </div>
+                      <div>
+                        <p className="font-medium">{file.fileName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatFileSize(file.size)} •{" "}
+                          {formatDate(file.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{file.fileName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatFileSize(file.size)} •{" "}
-                        {formatDate(file.createdAt)}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedFile(file)}
+                      >
+                        <FileTextIcon className="h-4 w-4 mr-1" />
+                        Preview
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <DownloadIcon className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteFile(file.id)}
+                      >
+                        <Trash2Icon className="h-4 w-4 mr-1" />
+                        Excluir
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedFile(file)}
-                    >
-                      <FileTextIcon className="h-4 w-4 mr-1" />
-                      Preview
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <DownloadIcon className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteFile(file.id)}
-                    >
-                      <Trash2Icon className="h-4 w-4 mr-1" />
-                      Excluir
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          <OffsetPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-          />
+            <OffsetPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+            />
+          </div>
         </CardContent>
       </Card>
       {selectedFile && (
