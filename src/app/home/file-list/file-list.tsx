@@ -1,4 +1,5 @@
-import type { FileType } from "#/db/schema";
+import { DownloadIcon, FileTextIcon, Trash2Icon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "#/app/components/ui/button";
 import {
   Card,
@@ -12,25 +13,20 @@ import {
   getFileIcon,
   getFileType,
 } from "#/app/lib/utils";
-import { DownloadIcon, FileTextIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
-import { SearchFile } from "./search-file";
-import { PreviewFile } from "./preview-file";
+import type { FileType } from "#/db/schema";
 import { EmptyFiles } from "./empty-files";
+import { PreviewFile } from "./preview-file";
+import { SearchFile } from "./search-file";
 
-function FileList({
-  deleteFile,
-  files,
-}: {
-  deleteFile: (id: number) => void;
-  files: FileType[];
-}) {
+function FileList({ files }: { files: FileType[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
 
   const filteredFiles = files.filter((file) =>
     file.fileName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const deleteFile = (_: number) => {};
 
   return (
     <>

@@ -1,17 +1,19 @@
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: porque sim */
+
+import { useQueryClient } from "@tanstack/react-query";
+import { FileUp } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Card } from "#/app/components/ui/card";
 import { Input } from "#/app/components/ui/input";
-
 import { Progress } from "#/app/components/ui/progress";
-import type { InsertFileType } from "#/db/schema";
 import { createFile } from "#/server/create-file";
-import { FileUp } from "lucide-react";
-import { useState, useRef } from "react";
-import { toast } from "sonner";
 
-function UploadFile({ addFile }: { addFile: (file: InsertFileType) => void }) {
+function UploadFile() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -31,7 +33,7 @@ function UploadFile({ addFile }: { addFile: (file: InsertFileType) => void }) {
     const arrayBuffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("1");
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,18 +64,7 @@ function UploadFile({ addFile }: { addFile: (file: InsertFileType) => void }) {
 
       setUploadProgress(100);
 
-      if (response.status === "ok") {
-        // Fetch the file info from the database to get the complete FileType
-        const newFile: InsertFileType = {
-          id: Date.now(), // Temporary ID until refresh
-          fileName: uploadedFile.name,
-          hash: hash,
-          size: uploadedFile.size,
-          path: `/files/${uploadedFile.name}`,
-          createdAt: new Date(),
-        };
-        addFile(newFile);
-      } else {
+      if (response.status !== "ok") {
         toast.error("Erro ao enviar arquivo.");
         console.error("Failed to upload file");
       }
@@ -84,11 +75,16 @@ function UploadFile({ addFile }: { addFile: (file: InsertFileType) => void }) {
       );
       console.error("Error uploading file:", error);
     } finally {
+      queryClient.invalidateQueries({ queryKey: ["all-files"] });
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
       }, 500);
     }
+  };
+
+  const handleSelectFile = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -101,9 +97,10 @@ function UploadFile({ addFile }: { addFile: (file: InsertFileType) => void }) {
           </p>
         </div>
 
-        <div
+        <button
+          type="button"
+          onClick={handleSelectFile}
           className="border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => fileInputRef.current?.click()}
         >
           <FileUp className="h-12 w-12 text-muted-foreground" />
           <div className="text-center">
@@ -119,7 +116,7 @@ function UploadFile({ addFile }: { addFile: (file: InsertFileType) => void }) {
             onChange={handleFileUpload}
             multiple
           />
-        </div>
+        </button>
 
         {/* Upload Progress */}
         {isUploading && (

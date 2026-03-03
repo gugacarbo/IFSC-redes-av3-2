@@ -1,4 +1,5 @@
 import z from "zod";
+import type { FileType } from "#/db/schema";
 
 export interface COMMAND {
   cmd:
@@ -16,13 +17,13 @@ export interface LIST_REQ extends COMMAND {
 
 export interface LIST_RESP extends COMMAND {
   cmd: "list_resp";
-  files: string[]; //"<file_list_vector>";
+  files: FileType[]; //"<file_list_vector>";
 }
 
 export const putReqSchema = z.object({
   cmd: z.literal("put_req"),
   file: z.string().min(1),
-  hash: z.string().length(64),
+  hash: z.string().min(1).max(256),
   value: z.string().min(1),
 });
 

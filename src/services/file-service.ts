@@ -1,14 +1,20 @@
+import { createHash } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { PUT_REQ } from "#/@types/command";
 import { db } from "#/db";
 import { files } from "#/db/schema";
 import { env } from "#/env";
-import { createHash } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+export async function listFiles() {
+  const filesList = await db.query.files.findMany();
+
+  return filesList;
+}
 
 export async function validateFileInput({
   file,
@@ -18,6 +24,7 @@ export async function validateFileInput({
   const fileBuffer = Buffer.from(value, "base64");
 
   const calculatedHash = createHash("sha256").update(fileBuffer).digest("hex");
+  console.log({ hash, calculatedHash });
 
   if (calculatedHash !== hash) {
     throw new Error("Invalid Hash");
