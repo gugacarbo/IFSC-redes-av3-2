@@ -1,5 +1,6 @@
 import { DownloadIcon, FileTextIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import type { FileType } from "#/db/schema";
 import { Button } from "#/app/components/ui/button";
 import {
   Card,
@@ -14,13 +15,12 @@ import {
   getFileIcon,
   getFileType,
 } from "#/app/lib/utils";
-import type { FileType } from "#/db/schema";
-import { UploadProgress } from "./upload-progress";
+import { UploadProgress } from "./components/upload-progress";
 import { useUploadFile } from "./hooks/use-upload-file";
-import { EmptyFiles } from "./empty-files";
-import { PreviewFile } from "./preview-file";
-import { SearchFile } from "./search-file";
-import { DragHere } from "./drag-here";
+import { EmptyFiles } from "./components/empty-files";
+import { PreviewFile } from "./components/preview-file";
+import { SearchFile } from "./components/search-file";
+import { DragHere } from "./components/drag-here";
 import { OffsetPagination } from "#/app/components/offset-pagination";
 
 interface FileListProps {
@@ -29,6 +29,8 @@ interface FileListProps {
   totalPages: number;
   totalItems: number;
   onPageChange: (page: number) => void;
+  searchQuery?: string;
+  onSearchChange: (value: string) => void;
 }
 
 function FileList({
@@ -37,13 +39,10 @@ function FileList({
   totalPages,
   totalItems,
   onPageChange,
+  searchQuery,
+  onSearchChange,
 }: FileListProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-
-  const filteredFiles = files.filter((file) =>
-    file.fileName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const {
     isUploading,
@@ -59,7 +58,7 @@ function FileList({
 
   return (
     <>
-      <SearchFile value={searchQuery} onChange={setSearchQuery} />
+      <SearchFile value={searchQuery} onChange={onSearchChange} />
 
       <Card {...getRootProps()} className="relative ">
         <DragHere isDragActive={isDragActive} />
@@ -83,11 +82,11 @@ function FileList({
           {isUploading && <UploadProgress progress={uploadProgress} />}
 
           {/* File Items */}
-          {filteredFiles.length === 0 ? (
+          {files.length === 0 ? (
             <EmptyFiles />
           ) : (
             <div className="space-y-3">
-              {filteredFiles.map((file) => (
+              {files.map((file) => (
                 <div
                   key={file.id}
                   className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors"

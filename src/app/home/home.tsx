@@ -1,29 +1,67 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect } from "react";
 import { FileList } from "#/app/home/file-list/file-list";
 import { Header } from "#/app/home/header";
 import { Stats } from "#/app/home/stats/stats";
 import { listFilesFn } from "#/server/list-files";
+import { Route } from "#/routes";
 
 const ITEMS_PER_PAGE = 10;
 
 function Home() {
-  const [currentPage, setCurrentPage] = useState(1);
+  const { limit = ITEMS_PER_PAGE, offset = 0, search } = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  const handleSetSearchQuery = (query: string) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        search: query || undefined,
+        offset: 0,
+      }),
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        offset: (page - 1) * limit,
+      }),
+    });
+  };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["files", currentPage],
+    queryKey: ["files", offset, limit, search],
     queryFn: () =>
       listFilesFn({
         data: {
-          offset: (currentPage - 1) * ITEMS_PER_PAGE,
-          limit: ITEMS_PER_PAGE,
+          offset,
+          limit,
+          search,
         },
       }),
   });
 
+  const totalPages = Math.ceil((data?.total || 0) / limit);
+
+  // Redirect to last valid page if offset is beyond total results
+  useEffect(() => {
+    if (data && data.total > 0 && offset >= data.total) {
+      const lastValidOffset = Math.max(0, (totalPages - 1) * limit);
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          offset: lastValidOffset,
+        }),
+      });
+    }
+  }, [data, offset, limit, totalPages, navigate]);
+
   const files = data?.files || [];
   const totalItems = data?.total || 0;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen pb-32">
@@ -32,13 +70,19 @@ function Home() {
         <p>Carregando</p>
       ) : (
         <main className="container mx-auto p-4 space-y-4">
-          <Stats files={files} />
+          <Stats
+            files={files}
+            totalItems={totalItems}
+            totalSize={data?.totalSize || 0}
+          />
           <FileList
             files={files}
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
             totalItems={totalItems}
+            searchQuery={search}
+            onSearchChange={handleSetSearchQuery}
           />
         </main>
       )}

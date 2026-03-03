@@ -5,7 +5,7 @@ function SearchFile({
   value,
   onChange,
 }: {
-  value: string;
+  value?: string;
   onChange: (value: string) => void;
 }) {
   return (
@@ -16,7 +16,7 @@ function SearchFile({
           type="text"
           placeholder="Buscar arquivos..."
           className="pl-10"
-          value={value}
+          value={value || ""}
           onChange={(e) => onChange(e.target.value)}
         />
       </div>

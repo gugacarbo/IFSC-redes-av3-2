@@ -1,9 +1,17 @@
 import { Card } from "#/app/components/ui/card";
 import { formatFileSize } from "#/app/lib/utils";
 import { FileIcon, FileUp, Upload } from "lucide-react";
-import type { FileType } from "#/db/schema"
+import type { FileType } from "#/db/schema";
 
-function Stats({ files }: { files: FileType[] }) {
+function Stats({
+  files,
+  totalItems,
+  totalSize,
+}: {
+  files: FileType[];
+  totalItems: number;
+  totalSize: number;
+}) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="p-6">
@@ -13,7 +21,7 @@ function Stats({ files }: { files: FileType[] }) {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Arquivos Totais</p>
-            <p className="text-2xl font-bold">{files.length}</p>
+            <p className="text-2xl font-bold">{totalItems}</p>
           </div>
         </div>
       </Card>
@@ -25,11 +33,7 @@ function Stats({ files }: { files: FileType[] }) {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Espaço Utilizado</p>
-            <p className="text-2xl font-bold">
-              {formatFileSize(
-                files.reduce((total, file) => total + file.size, 0)
-              )}
-            </p>
+            <p className="text-2xl font-bold">{formatFileSize(totalSize)}</p>
           </div>
         </div>
       </Card>

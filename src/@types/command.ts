@@ -13,16 +13,11 @@ export interface COMMAND {
 
 export interface LIST_REQ extends COMMAND {
   cmd: "list_req";
-  offset?: number;
-  limit?: number;
 }
 
 export interface LIST_RESP extends COMMAND {
   cmd: "list_resp";
   files: FileType[]; //"<file_list_vector>";
-  total: number;
-  offset: number;
-  limit: number;
 }
 
 export const putReqSchema = z.object({

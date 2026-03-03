@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { count } from "drizzle-orm";
+import { count, like, sql, sum } from "drizzle-orm";
 import type { PUT_REQ } from "#/@types/command";
 import { db } from "#/db";
 import { files } from "#/db/schema";
@@ -21,19 +21,45 @@ export function resolvePath(path: string) {
   return filePath;
 }
 
-export async function listFiles(offset = 0, limit = 10) {
+export async function listFiles({
+  offset = 0,
+  limit = 10,
+  search,
+}: {
+  offset?: number;
+  limit?: number;
+  search?: string;
+}) {
+  const whereClause = search
+    ? like(sql`lower(${files.fileName})`, `%${search.toLowerCase()}%`)
+    : undefined;
+
   const filesList = await db.query.files.findMany({
     orderBy: (fields, { desc }) => desc(fields.createdAt),
     limit,
     offset,
+    where: whereClause,
   });
 
   return filesList;
 }
 
-export async function countFiles() {
-  const [result] = await db.select({ count: count() }).from(files);
+export async function countFiles(search = "") {
+  const query = db.select({ count: count() }).from(files);
+
+  if (search) {
+    query.where(
+      like(sql`lower(${files.fileName})`, `%${search.toLowerCase()}%`)
+    );
+  }
+
+  const [result] = await query;
   return result?.count ?? 0;
+}
+
+export async function getTotalSize() {
+  const [result] = await db.select({ total: sum(files.size) }).from(files);
+  return Number(result?.total ?? "0") ?? 0;
 }
 
 export async function validateFileInput({
