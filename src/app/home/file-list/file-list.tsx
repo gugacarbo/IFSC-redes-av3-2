@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "#/app/components/ui/card";
+
 import {
   formatDate,
   formatFileSize,
@@ -20,8 +21,23 @@ import { EmptyFiles } from "./empty-files";
 import { PreviewFile } from "./preview-file";
 import { SearchFile } from "./search-file";
 import { DragHere } from "./drag-here";
+import { OffsetPagination } from "#/app/components/offset-pagination";
 
-function FileList({ files }: { files: FileType[] }) {
+interface FileListProps {
+  files: FileType[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+}
+
+function FileList({
+  files,
+  currentPage,
+  totalPages,
+  totalItems,
+  onPageChange,
+}: FileListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
 
@@ -36,7 +52,7 @@ function FileList({ files }: { files: FileType[] }) {
     getInputProps,
     isDragActive,
     open,
-    isFileDialogActive
+    isFileDialogActive,
   } = useUploadFile();
 
   const deleteFile = (_: number) => {};
@@ -51,10 +67,14 @@ function FileList({ files }: { files: FileType[] }) {
           <div>
             <CardTitle>Arquivos</CardTitle>
             <p className="text-sm text-muted-foreground">
-              {filteredFiles.length} arquivos
+              {totalItems} arquivos no total
             </p>
           </div>
-          <Button onClick={open} variant="default" disabled={isFileDialogActive}>
+          <Button
+            onClick={open}
+            variant="default"
+            disabled={isFileDialogActive}
+          >
             Adicionar Arquivo
           </Button>
         </CardHeader>
@@ -110,6 +130,12 @@ function FileList({ files }: { files: FileType[] }) {
               ))}
             </div>
           )}
+
+          <OffsetPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+          />
         </CardContent>
       </Card>
       {selectedFile && (

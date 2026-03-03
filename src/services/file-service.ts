@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { count } from "drizzle-orm";
 import type { PUT_REQ } from "#/@types/command";
 import { db } from "#/db";
 import { files } from "#/db/schema";
@@ -20,12 +21,19 @@ export function resolvePath(path: string) {
   return filePath;
 }
 
-export async function listFiles() {
+export async function listFiles(offset = 0, limit = 10) {
   const filesList = await db.query.files.findMany({
     orderBy: (fields, { desc }) => desc(fields.createdAt),
+    limit,
+    offset,
   });
 
   return filesList;
+}
+
+export async function countFiles() {
+  const [result] = await db.select({ count: count() }).from(files);
+  return result?.count ?? 0;
 }
 
 export async function validateFileInput({
