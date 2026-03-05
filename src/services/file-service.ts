@@ -8,10 +8,10 @@ import { db } from "#/db";
 import { files } from "#/db/schema";
 import { env } from "#/env";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 export function resolvePath(path: string) {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+
   const storagePath = env.STORAGE_PATH;
 
   const appRoot = join(__dirname, "..", "..");
@@ -42,19 +42,6 @@ export async function listFiles({
   });
 
   return filesList;
-}
-
-export async function countFiles(search = "") {
-  const query = db.select({ count: count() }).from(files);
-
-  if (search) {
-    query.where(
-      like(sql`lower(${files.fileName})`, `%${search.toLowerCase()}%`)
-    );
-  }
-
-  const [result] = await query;
-  return result?.count ?? 0;
 }
 
 export async function getTotalSize() {
@@ -110,4 +97,55 @@ export async function putFile({
       hash: hash,
     })
     .returning();
+}
+
+export async function countFiles(search = "") {
+  const query = db.select({ count: count() }).from(files);
+
+  if (search) {
+    query.where(
+      like(sql`lower(${files.fileName})`, `%${search.toLowerCase()}%`)
+    );
+  }
+
+  const [result] = await query;
+  return result?.count ?? 0;
+}
+
+export interface FileStats {
+  count: number;
+  totalSize: number;
+  uploadsToday: number;
+}
+
+export async function filesStats(): Promise<FileStats> {
+  const now = new Date();
+
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+  const startOfTodayUnix = Math.floor(startOfToday.getTime() / 1000);
+
+  const countQuery = db.select({ count: count() }).from(files);
+
+  const [countResult] = await countQuery;
+
+  const sizeQuery = db.select({ total: sum(files.size) }).from(files);
+
+  const [sizeResult] = await sizeQuery;
+
+  const todayQuery = db
+    .select({ count: count() })
+    .from(files)
+    .where(sql`${files.createdAt} >= ${startOfTodayUnix}`);
+
+  const [todayResult] = await todayQuery;
+
+  return {
+    count: countResult?.count ?? 0,
+    totalSize: Number(sizeResult?.total ?? "0") ?? 0,
+    uploadsToday: todayResult?.count ?? 0,
+  };
 }

@@ -1,5 +1,5 @@
-import { cn } from "#/app/lib/utils";
 import { FileUp } from "lucide-react";
+import { cn } from "#/lib/utils";
 
 function DragHere({ isDragActive }: { isDragActive: boolean }) {
   return (

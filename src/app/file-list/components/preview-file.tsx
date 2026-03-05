@@ -1,8 +1,5 @@
-import { formatDate, formatFileSize, getFileType } from "#/app/lib/utils";
-import { Download, FileText, Video, File } from "lucide-react";
+import { Download, File, FileText, Video } from "lucide-react";
 import { Button } from "#/app/components/ui/button";
-import type { FileType } from "#/db/schema";
-
 import {
   Dialog,
   DialogContent,
@@ -10,6 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/app/components/ui/dialog";
+import type { FileType } from "#/db/schema";
+import { formatDate, formatFileSize, getFileType } from "#/lib/utils";
 
 function PreviewFile({ file, close }: { file: FileType; close: () => void }) {
   const filetype = getFileType(file.path);
