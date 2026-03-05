@@ -7,17 +7,17 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { nitro } from "nitro/vite";
 
 const config = defineConfig({
-  plugins: [
-    nitro(),
-    devtools(),
-    tsconfigPaths({ projects: ["./tsconfig.json"] }),
-    tailwindcss(),
-    tanstackStart(),
-    viteReact(),
-  ],
-  nitro: {
-    serverDir: "./",
-  },
+	plugins: [
+		nitro(),
+		devtools(),
+		tsconfigPaths({ projects: ["./tsconfig.json"] }),
+		tailwindcss(),
+		tanstackStart(),
+		viteReact(),
+	],
+	nitro: {
+		serverDir: "./",
+	},
 });
 
 export default config;

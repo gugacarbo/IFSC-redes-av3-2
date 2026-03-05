@@ -4,16 +4,16 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type z from "zod";
 
 export const files = sqliteTable("files", {
-  id: integer({ mode: "number" }).primaryKey({
-    autoIncrement: true,
-  }),
-  fileName: text("file_name").notNull(),
-  hash: text("hash").notNull(),
-  size: integer("size").notNull(),
-  path: text("path").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
+	id: integer({ mode: "number" }).primaryKey({
+		autoIncrement: true,
+	}),
+	fileName: text("file_name").notNull(),
+	hash: text("hash").notNull(),
+	size: integer("size").notNull(),
+	path: text("path").notNull(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.notNull()
+		.default(sql`(unixepoch())`),
 });
 
 export const fileSchema = createSelectSchema(files);
