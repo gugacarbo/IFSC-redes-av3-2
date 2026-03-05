@@ -3,42 +3,49 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { count, eq, like, sql, sum } from "drizzle-orm";
-import type { GET_RESP, PUT_REQ } from "#/@types/command";
+import type { PUT_REQ } from "#/@types/command";
 import { db } from "#/db";
-import { files } from "#/db/schema";
+import { type FileType, files } from "#/db/schema";
 import { env } from "#/env";
 
+export interface FileData {
+	fileName: string;
+	hash: string;
+	value: string;
+}
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const appRoot = join(__dirname, "..", "..");
+
 export function resolvePath(path: string) {
-	const __filename = fileURLToPath(import.meta.url);
-	const __dirname = dirname(__filename);
+	const rootPath = join(appRoot, env.STORAGE_PATH);
+	return join(rootPath, path);
+}
 
-	const storagePath = env.STORAGE_PATH;
-
-	const appRoot = join(__dirname, "..", "..");
-
-	const rootPath = join(appRoot, storagePath);
-	const filePath = join(rootPath, path);
-	return filePath;
+function buildSearchClause(search?: string) {
+	return search
+		? like(sql`lower(${files.fileName})`, `%${search.toLowerCase()}%`)
+		: undefined;
 }
 
 export async function listFiles({
-	offset = 0,
-	limit = 10,
+	offset,
+	limit,
 	search,
+	columns,
 }: {
 	offset?: number;
 	limit?: number;
 	search?: string;
+	columns?: Partial<Record<keyof FileType, boolean>>;
 }) {
-	const whereClause = search
-		? like(sql`lower(${files.fileName})`, `%${search.toLowerCase()}%`)
-		: undefined;
-
 	const filesList = await db.query.files.findMany({
 		orderBy: (fields, { desc }) => desc(fields.createdAt),
-		limit,
+		where: buildSearchClause(search),
 		offset,
-		where: whereClause,
+		limit,
+		columns,
 	});
 
 	return filesList;
@@ -78,6 +85,14 @@ export async function putFile({
 	hash: string;
 	content: Buffer<ArrayBuffer>;
 }) {
+	const hasRecord = await db.query.files.findFirst({
+		where: eq(files.fileName, fileName),
+	});
+
+	if (hasRecord) {
+		throw new Error("Arquivo já existe!");
+	}
+
 	const randomId = randomBytes(4).toString("hex");
 	const extension = extname(fileName);
 	const nameWithoutExt = fileName.slice(0, fileName.length - extension.length);
@@ -102,10 +117,9 @@ export async function putFile({
 export async function countFiles(search = "") {
 	const query = db.select({ count: count() }).from(files);
 
-	if (search) {
-		query.where(
-			like(sql`lower(${files.fileName})`, `%${search.toLowerCase()}%`),
-		);
+	const searchClause = buildSearchClause(search);
+	if (searchClause) {
+		query.where(searchClause);
 	}
 
 	const [result] = await query;
@@ -119,38 +133,24 @@ export interface FileStats {
 }
 
 export async function filesStats(): Promise<FileStats> {
-	const now = new Date();
+	const startOfTodayUnix = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
 
-	const startOfToday = new Date(
-		now.getFullYear(),
-		now.getMonth(),
-		now.getDate(),
-	);
-	const startOfTodayUnix = Math.floor(startOfToday.getTime() / 1000);
-
-	const countQuery = db.select({ count: count() }).from(files);
-
-	const [countResult] = await countQuery;
-
-	const sizeQuery = db.select({ total: sum(files.size) }).from(files);
-
-	const [sizeResult] = await sizeQuery;
-
-	const todayQuery = db
-		.select({ count: count() })
-		.from(files)
-		.where(sql`${files.createdAt} >= ${startOfTodayUnix}`);
-
-	const [todayResult] = await todayQuery;
+	const [result] = await db
+		.select({
+			count: count(),
+			total: sum(files.size),
+			uploadsToday: sql<number>`sum(case when ${files.createdAt} >= ${startOfTodayUnix} then 1 else 0 end)`,
+		})
+		.from(files);
 
 	return {
-		count: countResult?.count ?? 0,
-		totalSize: Number(sizeResult?.total ?? "0") ?? 0,
-		uploadsToday: todayResult?.count ?? 0,
+		count: result?.count ?? 0,
+		totalSize: Number(result?.total ?? "0") ?? 0,
+		uploadsToday: result?.uploadsToday ?? 0,
 	};
 }
 
-export async function getFileById(id: number): Promise<GET_RESP | null> {
+export async function getFileById(id: number): Promise<FileData | null> {
 	const fileRecord = await db.query.files.findFirst({
 		where: eq(files.id, id),
 	});
@@ -163,8 +163,28 @@ export async function getFileById(id: number): Promise<GET_RESP | null> {
 	const base64Content = fileBuffer.toString("base64");
 
 	return {
-		cmd: "get_resp",
-		file: fileRecord.fileName,
+		fileName: fileRecord.fileName,
+		hash: fileRecord.hash,
+		value: base64Content,
+	};
+}
+
+export async function getFileByName(
+	fileName: string,
+): Promise<FileData | null> {
+	const fileRecord = await db.query.files.findFirst({
+		where: eq(files.fileName, fileName),
+	});
+
+	if (!fileRecord) {
+		return null;
+	}
+
+	const fileBuffer = await readFile(fileRecord.path);
+	const base64Content = fileBuffer.toString("base64");
+
+	return {
+		fileName: fileRecord.fileName,
 		hash: fileRecord.hash,
 		value: base64Content,
 	};

@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { createFile } from "#/server/create-file";
@@ -54,7 +54,7 @@ export function useUploadFile() {
 
 			updateFileProgress(uploadedFile.name, 100);
 
-			if (response.status !== "ok") {
+			if (!response.success) {
 				toast.error(`Erro ao enviar arquivo: ${uploadedFile.name}`);
 				console.error("Failed to upload file:", uploadedFile.name);
 			}
@@ -78,38 +78,25 @@ export function useUploadFile() {
 			uploadedFiles.map((file) => handleSingleFileUpload(file)),
 		);
 
+		// Refresh the file list
 		queryClient.invalidateQueries({ queryKey: ["files"] });
-		queryClient.invalidateQueries({ queryKey: ["stats"] });
+		queryClient.invalidateQueries({ queryKey: ["fileStats"] });
 
-		setTimeout(() => {
-			setIsUploading(false);
-			setUploadProgress([]);
-		}, 300);
+		setIsUploading(false);
 	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: pqsim
-	const onDrop = useCallback((acceptedFiles: File[]) => {
-		handleFilesUpload(acceptedFiles);
-	}, []);
-
-	const {
-		getRootProps,
-		getInputProps,
-		isDragActive,
-		open,
-		isFileDialogActive,
-	} = useDropzone({
-		onDrop,
+	const { getRootProps, getInputProps, isDragActive } = useDropzone({
+		onDrop: (acceptedFiles: File[]) => {
+			handleFilesUpload(acceptedFiles);
+		},
 		noClick: true,
 	});
 
 	return {
-		isUploading,
-		uploadProgress,
 		getRootProps,
 		getInputProps,
 		isDragActive,
-		open,
-		isFileDialogActive,
+		isUploading,
+		uploadProgress,
 	};
 }

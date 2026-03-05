@@ -1,8 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { Paginated } from "#/@types";
-import type { LIST_RESP } from "#/@types/command";
+import type { FileType } from "#/db/schema";
 import { countFiles, listFiles } from "#/services/file-service";
+
+export interface ListFilesResult {
+	files: FileType[];
+	total: number;
+	offset: number;
+	limit: number;
+}
 
 const listFilesParamsSchema = z.object({
 	offset: z.number().optional().default(0),
@@ -14,7 +20,7 @@ export const listFilesFn = createServerFn({
 	method: "GET",
 })
 	.inputValidator(listFilesParamsSchema)
-	.handler(async ({ data }): Promise<Paginated<LIST_RESP>> => {
+	.handler(async ({ data }): Promise<ListFilesResult> => {
 		const offset = data?.offset ?? 0;
 		const limit = data?.limit ?? 10;
 		const search = data?.search ?? "";
@@ -26,7 +32,6 @@ export const listFilesFn = createServerFn({
 			]);
 
 			return {
-				cmd: "list_resp",
 				files: filesList,
 				total,
 				offset,
@@ -36,7 +41,6 @@ export const listFilesFn = createServerFn({
 			console.error("Error listing files:\n", error);
 
 			return {
-				cmd: "list_resp",
 				files: [],
 				total: 0,
 				offset,

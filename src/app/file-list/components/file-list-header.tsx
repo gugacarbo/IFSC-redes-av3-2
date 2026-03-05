@@ -1,8 +1,5 @@
 import { Button } from "#/app/components/ui/button";
-import {
-	CardHeader,
-	CardTitle,
-} from "#/app/components/ui/card";
+import { CardHeader, CardTitle } from "#/app/components/ui/card";
 
 interface FileListHeaderProps {
 	totalItems: number;

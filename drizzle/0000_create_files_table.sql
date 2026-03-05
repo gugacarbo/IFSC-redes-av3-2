@@ -4,5 +4,7 @@ CREATE TABLE `files` (
 	`hash` text NOT NULL,
 	`size` integer NOT NULL,
 	`path` text NOT NULL,
-	`created_at` integer DEFAULT (unixepoch())
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `files_file_name_unique` ON `files` (`file_name`);

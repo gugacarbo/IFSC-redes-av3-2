@@ -27,13 +27,13 @@ export function useDownloadFile() {
 			const url = window.URL.createObjectURL(blob);
 			const link = document.createElement("a");
 			link.href = url;
-			link.download = data.file;
+			link.download = data.fileName;
 			document.body.appendChild(link);
 			link.click();
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(url);
 
-			toast.success(`Arquivo "${data.file}" baixado com sucesso!`);
+			toast.success(`Arquivo "${data.fileName}" baixado com sucesso!`);
 		},
 		onError: (error) => {
 			console.error("Error downloading file:", error);

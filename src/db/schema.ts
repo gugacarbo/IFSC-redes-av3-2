@@ -7,7 +7,7 @@ export const files = sqliteTable("files", {
 	id: integer({ mode: "number" }).primaryKey({
 		autoIncrement: true,
 	}),
-	fileName: text("file_name").notNull(),
+	fileName: text("file_name").notNull().unique(),
 	hash: text("hash").notNull(),
 	size: integer("size").notNull(),
 	path: text("path").notNull(),

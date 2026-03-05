@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "df3aac70-0bdc-4b0d-82fd-a315123d9f97",
+  "id": "7f92bbd4-2d47-4d7f-8afe-a3e86b006037",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "files": {
@@ -18,7 +18,7 @@
           "name": "file_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "hash": {
@@ -46,12 +46,20 @@
           "name": "created_at",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": "(unixepoch())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "files_file_name_unique": {
+          "name": "files_file_name_unique",
+          "columns": [
+            "file_name"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
