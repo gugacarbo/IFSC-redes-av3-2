@@ -25,8 +25,6 @@ export const listFilesFn = createServerFn({
 				countFiles(),
 			]);
 
-			await new Promise((res) => setTimeout(() => res(true), 600));
-
 			return {
 				cmd: "list_resp",
 				files: filesList,

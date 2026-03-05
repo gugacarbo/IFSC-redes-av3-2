@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { count, like, sql, sum } from "drizzle-orm";
-import type { PUT_REQ } from "#/@types/command";
+import { count, eq, like, sql, sum } from "drizzle-orm";
+import type { GET_RESP, PUT_REQ } from "#/@types/command";
 import { db } from "#/db";
 import { files } from "#/db/schema";
 import { env } from "#/env";
@@ -147,5 +147,25 @@ export async function filesStats(): Promise<FileStats> {
 		count: countResult?.count ?? 0,
 		totalSize: Number(sizeResult?.total ?? "0") ?? 0,
 		uploadsToday: todayResult?.count ?? 0,
+	};
+}
+
+export async function getFileById(id: number): Promise<GET_RESP | null> {
+	const fileRecord = await db.query.files.findFirst({
+		where: eq(files.id, id),
+	});
+
+	if (!fileRecord) {
+		return null;
+	}
+
+	const fileBuffer = await readFile(fileRecord.path);
+	const base64Content = fileBuffer.toString("base64");
+
+	return {
+		cmd: "get_resp",
+		file: fileRecord.fileName,
+		hash: fileRecord.hash,
+		value: base64Content,
 	};
 }
